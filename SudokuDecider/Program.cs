@@ -1,20 +1,23 @@
-﻿namespace SudokuDecider;
+﻿using System;
+namespace SudokuDecider;
 
-using System;
 using System.IO;
+using Decider.Csp.Integer;
 
 public static class Program
 {
   public static void Main(string[] args)
   {
     var lines = File.ReadAllLines(args[0]);
-    var sudoku = new char[9, 9];
+    var sudoku = new VariableInteger[9, 9];
     for (var i = 0; i < 9; i++)
     {
       var line = lines[i].Replace(" ", "").ToCharArray();
       for (var j = 0; j < 9; j++)
       {
-        sudoku[i, j] = line[j];
+        var ch = line[j];
+        var name = $"s{i}{j}";
+        sudoku[i, j] = ch == '.' ? new VariableInteger(name, 0, 9) : new VariableInteger(name, int.Parse(ch.ToString()), int.Parse(ch.ToString()));
       }
     }
 
@@ -34,20 +37,22 @@ public static class Program
     }
   }
 
-  private static void DumpBoard(char[,] sudoku)
+  private static void DumpBoard(VariableInteger[,] sudoku)
   {
     for (var i = 0; i < sudoku.GetLength(0); i++)
     {
       for (var j = 0; j < sudoku.GetLength(1); j++)
       {
-        Console.Write($"{sudoku[i, j]} ");
+        var element = sudoku[i, j];
+        var val = element.IsBound ? element.Value.ToString() : ".";
+        Console.Write($"{val} ");
       }
 
       Console.WriteLine();
     }
   }
 
-  private static bool Solve(char[,] board)
+  private static bool Solve(VariableInteger[,] board)
   {
     if (board == null || board.Length == 0)
     {
