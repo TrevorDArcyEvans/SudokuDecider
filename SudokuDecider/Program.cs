@@ -1,11 +1,11 @@
-﻿using System;
+﻿namespace SudokuDecider;
+
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Decider.Csp.BaseTypes;
 using Decider.Csp.Global;
-
-namespace SudokuDecider;
-
-using System.IO;
 using Decider.Csp.Integer;
 
 public static class Program
@@ -21,7 +21,7 @@ public static class Program
       {
         var ch = line[j];
         var name = $"s{i}{j}";
-        sudoku[i, j] = ch == '.' ? new VariableInteger(name, 0, 9) : new VariableInteger(name, int.Parse(ch.ToString()), int.Parse(ch.ToString()));
+        sudoku[i, j] = ch == '.' ? new VariableInteger(name, 1, 9) : new VariableInteger(name, int.Parse(ch.ToString()), int.Parse(ch.ToString()));
       }
     }
 
@@ -63,7 +63,18 @@ public static class Program
       return false;
     }
 
-    return true;
+    var variables = new List<VariableInteger>();
+    for (var row = 0; row < board.GetLength(0); row++)
+    {
+      var rowInts = board.SliceRow(row);
+      variables.AddRange(rowInts);
+    }
+
+    var constraints = GetConstraints(board);
+    var state = new StateInteger(variables, constraints);
+    var searchResult = state.Search();
+
+    return searchResult == StateOperationResult.Solved;
   }
 
   private static List<IConstraint> GetConstraints(VariableInteger[,] sudoku)
@@ -71,20 +82,40 @@ public static class Program
     var constraints = new List<IConstraint>();
 
     // 1. Each row must contain the numbers from 1 to 9, without repetitions
-    // 9 --> AllDifferentInteger
-    for (var row = 0; row < 9; row++)
+    for (var row = 0; row < sudoku.GetLength(0); row++)
     {
-      var allDiff = new AllDifferentInteger(new { });
+      var rowInts = sudoku.SliceRow(row);
+      var allDiff = new AllDifferentInteger(rowInts);
+      constraints.Add(allDiff);
     }
 
     // 2. Each column must contain the numbers from 1 to 9, without repetitions
-    // 9 --> AllDifferentInteger
+    for (var col = 0; col < sudoku.GetLength(1); col++)
+    {
+      var colInts = sudoku.SliceCol(col);
+      var allDiff = new AllDifferentInteger(colInts);
+      constraints.Add(allDiff);
+    }
 
     // 3. The digits can only occur once per 3x3 block (nonet)
-    // 9 --> AllDifferentInteger
+    // TODO   numbers in nonet unique
 
     // 4. The sum of every single row, column, and nonet must equal 45
-    // 9 --> ConstraintInteger
+    for (var row = 0; row < sudoku.GetLength(0); row++)
+    {
+      var rowInts = sudoku.SliceRow(row).ToList();
+      var sum = new ConstraintInteger(rowInts[0] + rowInts[1] + rowInts[2] + rowInts[3] + rowInts[4] + rowInts[5] + rowInts[6] + rowInts[7] + rowInts[8] == 45);
+      constraints.Add(sum);
+    }
+
+    for (var col = 0; col < sudoku.GetLength(1); col++)
+    {
+      var colInts = sudoku.SliceCol(col).ToList();
+      var sum = new ConstraintInteger(colInts[0] + colInts[1] + colInts[2] + colInts[3] + colInts[4] + colInts[5] + colInts[6] + colInts[7] + colInts[8] == 45);
+      constraints.Add(sum);
+    }
+
+    // TODO   sum in nonet must equal 45
 
     return constraints;
   }
