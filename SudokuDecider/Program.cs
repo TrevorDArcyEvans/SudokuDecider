@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using Decider.Csp.BaseTypes;
+using Decider.Csp.Global;
+
 namespace SudokuDecider;
 
 using System.IO;
@@ -60,5 +64,28 @@ public static class Program
     }
 
     return true;
+  }
+
+  private static List<IConstraint> GetConstraints(VariableInteger[,] sudoku)
+  {
+    var constraints = new List<IConstraint>();
+
+    // 1. Each row must contain the numbers from 1 to 9, without repetitions
+    // 9 --> AllDifferentInteger
+    for (var row = 0; row < 9; row++)
+    {
+      var allDiff = new AllDifferentInteger(new { });
+    }
+
+    // 2. Each column must contain the numbers from 1 to 9, without repetitions
+    // 9 --> AllDifferentInteger
+
+    // 3. The digits can only occur once per 3x3 block (nonet)
+    // 9 --> AllDifferentInteger
+
+    // 4. The sum of every single row, column, and nonet must equal 45
+    // 9 --> ConstraintInteger
+
+    return constraints;
   }
 }
