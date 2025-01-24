@@ -13,17 +13,7 @@ public static class Program
   public static void Main(string[] args)
   {
     var lines = File.ReadAllLines(args[0]);
-    var sudoku = new VariableInteger[9, 9];
-    for (var i = 0; i < 9; i++)
-    {
-      var line = lines[i].Replace(" ", "").ToCharArray();
-      for (var j = 0; j < 9; j++)
-      {
-        var ch = line[j];
-        var name = $"s{i}{j}";
-        sudoku[i, j] = ch == '.' ? new VariableInteger(name, 1, 9) : new VariableInteger(name, int.Parse(ch.ToString()), int.Parse(ch.ToString()));
-      }
-    }
+    var sudoku = GetBoard(lines);
 
     DumpBoard(sudoku);
 
@@ -31,13 +21,60 @@ public static class Program
     Console.WriteLine("Attempting solution...");
     Console.WriteLine();
 
-    if (Solve(sudoku))
+    var (success, state) = Solve(sudoku);
+    if (success)
     {
-      DumpBoard(sudoku);
+      Console.WriteLine($"Runtime:\t{state.Runtime}");
+      Console.WriteLine($"Backtracks:\t{state.Backtracks}");
+      Console.WriteLine($"Solutions:\t{state.Solutions.Count}");
+      Console.WriteLine($"Optimal sln:\t{state.OptimalSolution != null}");
+      Console.WriteLine();
+
+      DumpBoard(state.Solutions.First());
+
+      Console.WriteLine();
+
+      DumpBoard(state.Solutions.Last());
     }
     else
     {
       Console.WriteLine("Solution failed");
+    }
+  }
+
+  private static VariableInteger[,] GetBoard(string[] lines)
+  {
+    var sudoku = new VariableInteger[9, 9];
+    for (var row = 0; row < 9; row++)
+    {
+      var line = lines[row].Replace(" ", "").ToCharArray();
+      for (var col = 0; col < 9; col++)
+      {
+        var ch = line[col];
+        var name = GetElementName(row, col);
+        sudoku[row, col] = ch == '.' ? new VariableInteger(name, 1, 9) : new VariableInteger(name, int.Parse(ch.ToString()), int.Parse(ch.ToString()));
+      }
+    }
+
+    return sudoku;
+  }
+
+  private static string GetElementName(int row, int col)
+  {
+    return $"s{row}{col}";
+  }
+
+  private static void DumpBoard(IDictionary<string, IVariable<int>> sudoku)
+  {
+    for (var row = 0; row < 9; row++)
+    {
+      for (var col = 0; col < 9; col++)
+      {
+        var name = GetElementName(row, col);
+        var val = sudoku[name];
+        Console.Write($"{val.InstantiatedValue} ");
+      }
+      Console.WriteLine();
     }
   }
 
@@ -56,11 +93,11 @@ public static class Program
     }
   }
 
-  private static bool Solve(VariableInteger[,] board)
+  private static (bool, StateInteger) Solve(VariableInteger[,] board)
   {
     if (board == null || board.Length == 0)
     {
-      return false;
+      return (false, null);
     }
 
     var variables = new List<VariableInteger>();
@@ -72,9 +109,9 @@ public static class Program
 
     var constraints = GetConstraints(board);
     var state = new StateInteger(variables, constraints);
-    var searchResult = state.Search();
+    var searchResult = state.SearchAllSolutions();
 
-    return searchResult == StateOperationResult.Solved;
+    return (searchResult == StateOperationResult.Solved, state);
   }
 
   private static List<IConstraint> GetConstraints(VariableInteger[,] sudoku)

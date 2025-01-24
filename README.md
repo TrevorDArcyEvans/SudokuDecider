@@ -51,3 +51,6 @@ dotnet build
 cd SudokuDecider
 dotnet run
 ```
+
+## Further information
+* [Sudoku Solver](https://github.com/TrevorDArcyEvans/SudokuSolver)
