@@ -32,9 +32,12 @@ public static class Program
 
       DumpBoard(state.Solutions.First());
 
-      Console.WriteLine();
+      if (state.Solutions.Count > 1)
+      {
+        Console.WriteLine();
 
-      DumpBoard(state.Solutions.Last());
+        DumpBoard(state.Solutions.Last());
+      }
     }
     else
     {
@@ -74,6 +77,7 @@ public static class Program
         var val = sudoku[name];
         Console.Write($"{val.InstantiatedValue} ");
       }
+
       Console.WriteLine();
     }
   }
@@ -116,6 +120,9 @@ public static class Program
 
   private static List<IConstraint> GetConstraints(VariableInteger[,] sudoku)
   {
+    var rowBaseIdxs = new[] {0, 3, 6};
+    var colBaseIdxs = new[] {0, 3, 6};
+
     var constraints = new List<IConstraint>();
 
     // 1. Each row must contain the numbers from 1 to 9, without repetitions
@@ -135,7 +142,22 @@ public static class Program
     }
 
     // 3. The digits can only occur once per 3x3 block (nonet)
-    // TODO   numbers in nonet unique
+    foreach (var rowBaseIdx in rowBaseIdxs)
+    {
+      foreach (var colBaseIdx in colBaseIdxs)
+      {
+        var allDiff = new AllDifferentInteger
+        (
+          new[]
+          {
+            sudoku[rowBaseIdx + 0, colBaseIdx + 0], sudoku[rowBaseIdx + 0, colBaseIdx + 1], sudoku[rowBaseIdx + 0, colBaseIdx + 2],
+            sudoku[rowBaseIdx + 1, colBaseIdx + 0], sudoku[rowBaseIdx + 1, colBaseIdx + 1], sudoku[rowBaseIdx + 1, colBaseIdx + 2],
+            sudoku[rowBaseIdx + 2, colBaseIdx + 0], sudoku[rowBaseIdx + 2, colBaseIdx + 1], sudoku[rowBaseIdx + 2, colBaseIdx + 2]
+          }
+        );
+        constraints.Add(allDiff);
+      }
+    }
 
     // 4. The sum of every single row, column, and nonet must equal 45
     for (var row = 0; row < sudoku.GetLength(0); row++)
@@ -152,7 +174,21 @@ public static class Program
       constraints.Add(sum);
     }
 
-    // TODO   sum in nonet must equal 45
+    // sum in nonet must equal 45
+    foreach (var rowBaseIdx in rowBaseIdxs)
+    {
+      foreach (var colBaseIdx in colBaseIdxs)
+      {
+        var sum = new ConstraintInteger
+        (
+          sudoku[rowBaseIdx + 0, colBaseIdx + 0] + sudoku[rowBaseIdx + 0, colBaseIdx + 1] + sudoku[rowBaseIdx + 0, colBaseIdx + 2] +
+          sudoku[rowBaseIdx + 1, colBaseIdx + 0] + sudoku[rowBaseIdx + 1, colBaseIdx + 1] + sudoku[rowBaseIdx + 1, colBaseIdx + 2] +
+          sudoku[rowBaseIdx + 2, colBaseIdx + 0] + sudoku[rowBaseIdx + 2, colBaseIdx + 1] + sudoku[rowBaseIdx + 2, colBaseIdx + 2] ==
+          45
+        );
+        constraints.Add(sum);
+      }
+    }
 
     return constraints;
   }
