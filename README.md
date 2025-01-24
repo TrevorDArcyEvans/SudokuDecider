@@ -15,6 +15,11 @@ A less straightforward sudoku solver in C#
 
 Attempting solution...
 
+Runtime:        00:00:00.0929975
+Backtracks:     81
+Solutions:      1
+Optimal sln:    False
+
 5 3 4 6 7 8 9 1 2 
 6 7 2 1 9 5 3 4 8 
 1 9 8 3 4 2 5 6 7 
@@ -49,8 +54,21 @@ dotnet build
 
 # run code
 cd SudokuDecider
-dotnet run
+dotnet run sudoku.txt
 ```
 
+## How it works
+The rules of sudoku allow it to be formulated as a
+[constraint satisfaction problem (CSP)](https://en.wikipedia.org/wiki/Constraint_satisfaction_problem).
+This then allows it to be solved using a suitable CSP solver.
+
+Note that there is no 'optimisation' as such.
+
+A 'well formed' sudoku puzzle has exactly **one** solution. This method
+attempts to find **all** solutions.
+
 ## Further information
+* [Decider Constraint Programming Solver](https://github.com/lifebeyondfife/Decider)
 * [Sudoku Solver](https://github.com/TrevorDArcyEvans/SudokuSolver)
+* [Sudoku solving algorithms](https://en.wikipedia.org/wiki/Sudoku_solving_algorithms#Constraint_programming)
+* [Mathematics of Sudoku](https://en.wikipedia.org/wiki/Mathematics_of_Sudoku)
